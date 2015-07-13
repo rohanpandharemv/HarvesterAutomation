@@ -2,6 +2,7 @@ package com.sprinklr.harvester.bulkRunner;
 
 import java.util.*;
 
+import com.sprinklr.harvester.model.InitialData;
 import com.sprinklr.harvester.util.CsvParser;
 import com.sprinklr.harvester.util.JdbcConnect;
 import com.sprinklr.harvester.util.PropertyHandler;
@@ -42,25 +43,35 @@ public class BulkRunnerScript {
 				+ PropertyHandler.getProperties().getProperty("client")
 				+ cmdTimeOption
 				+ PropertyHandler.getProperties().getProperty("date")
-				+ cmdStubIdOption + stubIdString + cmdAmqHostOption
+				+ cmdAmqHostOption
 				+ PropertyHandler.getProperties().getProperty("mqhost");
+
+		if (sid != 0) {
+			mainCommand = mainCommand + cmdStubIdOption + stubIdString;
+		}
 		System.out.println(mainCommand);
 		return mainCommand;
 	}
 
-	public static void callBulkRunner() {
+	public static void callBulkRunner(HashMap<Integer, InitialData> testData) {
 
-		Map<Integer, String> stubUrlId = CsvParser.parseCsvWithIdUrl();
-		Set<Integer> keySet = stubUrlId.keySet();
-		Iterator<Integer> ksItr = keySet.iterator();
+		Set<Integer> testDataKeys = testData.keySet();
+		Iterator<Integer> testDataKey = testDataKeys.iterator();
 
-		if (PropertyHandler.getProperties().getProperty("harvestAll").trim()
-				.equals("false")) {
-			while (ksItr.hasNext()) {
-				CommandExecutor.exec(commandMaker(ksItr.next()));
-			}
-		} else {
-			CommandExecutor.exec(commandMaker(0));
+		while (testDataKey.hasNext()) {
+			CommandExecutor.exec(commandMaker(testDataKey.next()));
 		}
+
+		/**
+		 * Commenting below code as we do not want to push all the stubs in
+		 * queue. For all we need to have a End-point for all the stubs in csv/db.
+		 */
+
+		/*
+		 * if (PropertyHandler.getProperties().getProperty("harvestAll").trim()
+		 * .equals("false")) { while (ksItr.hasNext()) {
+		 * CommandExecutor.exec(commandMaker(ksItr.next())); } } else {
+		 * CommandExecutor.exec(commandMaker(0)); }
+		 */
 	}
 }

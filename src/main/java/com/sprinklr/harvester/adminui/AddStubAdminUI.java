@@ -22,7 +22,7 @@ public class AddStubAdminUI {
 
 		String url = PropertyHandler.getProperties().getProperty("adminURL");
 		String client = PropertyHandler.getProperties().getProperty("client");
-		driver.get(url + "/" + client);
+		driver.get(url + "/" + client + "/login.jsp");
 
 		driver.findElement(By.name("uname")).sendKeys("kam");
 		driver.findElement(By.name("passcode")).sendKeys("nba2012");
@@ -32,6 +32,11 @@ public class AddStubAdminUI {
 		Iterator<String> urlListIterator = urlListToInsert.iterator();
 
 		while (urlListIterator.hasNext()) {
+			String stubURL = urlListIterator.next();
+			if (JdbcConnect.getStubID(stubURL) != 0) {
+				System.out.println("Stub alrady exists in DB! " + stubURL);
+				continue;
+			}
 			driver.findElement(By.id("extdd-18")).click();
 			driver.switchTo().frame(0);
 			clickManageDropDownBox(driver);
@@ -39,7 +44,7 @@ public class AddStubAdminUI {
 			driver.switchTo().defaultContent();
 
 			driver.switchTo().frame(1);
-			driver.findElement(By.name("url")).sendKeys(urlListIterator.next());
+			driver.findElement(By.name("url")).sendKeys(stubURL);
 
 			Select select = new Select(driver.findElement(By.name("source_id")));
 			select.selectByVisibleText(PropertyHandler.getProperties()
@@ -53,6 +58,7 @@ public class AddStubAdminUI {
 			pause(5);
 			driver.switchTo().defaultContent();
 		}
+		driver.close();
 	}
 
 	/**

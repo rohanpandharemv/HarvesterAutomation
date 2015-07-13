@@ -2,10 +2,8 @@ package com.sprinklr.harvester.util;
 
 import java.io.BufferedWriter;
 import java.io.File;
-import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
 import java.io.FileWriter;
-import java.io.IOException;
 import java.io.OutputStreamWriter;
 import java.io.Writer;
 import java.sql.Connection;
@@ -14,13 +12,10 @@ import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Statement;
 import java.util.ArrayList;
-import java.util.Date;
 import java.util.HashMap;
-import java.util.HashSet;
-import java.util.Iterator;
 import java.util.List;
-import java.util.Map;
-import java.util.Set;
+
+import com.sprinklr.harvester.model.InitialData;
 
 public class JdbcConnect {
 
@@ -39,10 +34,10 @@ public class JdbcConnect {
 		try {
 			Class.forName(driver);
 
-			// System.out.println("Connecting to database....");
+			System.out.println("Connecting to database....");
 
-			// System.out.println("jdbc:mysql://"+host+":"+port+"/"+dbname+"," +
-			// user+ ","+ pass);
+			System.out.println("jdbc:mysql://" + host + ":" + port + "/"
+					+ dbname + "," + user + "," + pass);
 
 			con = DriverManager.getConnection("jdbc:mysql://" + host + ":"
 					+ port + "/" + dbname + utf8, user, pass);
@@ -65,10 +60,8 @@ public class JdbcConnect {
 	 * @return List<String> Url values from csv file
 	 */
 	public static List<String> csvParser() {
-		CsvParser csv = new CsvParser();
 		List<String> urlListFromCsvFile = new ArrayList<String>();
 		urlListFromCsvFile = CsvParser.parseCsv();
-
 		return urlListFromCsvFile;
 	}
 
@@ -92,7 +85,7 @@ public class JdbcConnect {
 			conn = getDBConnection();
 			stmt = conn.createStatement();
 
-			query = "SELECT ID FROM SOURCE WHERE NAME LIKE '%CTrip%'";
+			query = "SELECT ID FROM SOURCE WHERE NAME LIKE '%" + source + "%'";
 			rs = stmt.executeQuery(query);
 			while (rs.next()) {
 				sourceId = rs.getInt("ID");
@@ -131,102 +124,65 @@ public class JdbcConnect {
 		return sourceId;
 	}
 
+	public static int getStubID(String stubURL) {
+		Connection conn = null;
+		Statement stmt = null;
+		ResultSet rs = null;
+		String query = null;
+		try {
+			conn = getDBConnection();
+			stmt = conn.createStatement();
+
+			query = "SELECT ID, URL FROM HARVESTER WHERE URL='" + stubURL + "'";
+			System.out.println("Query: " + query);
+
+			rs = stmt.executeQuery(query);
+
+			while (rs.next()) {
+				return rs.getInt("ID");
+			}
+		} catch (Exception ex) {
+			ex.printStackTrace();
+		}
+		return 0;
+	}
+
 	/**
 	 * Method to read data from Database by comparing urls from csv file, put
 	 * them in the HashMap with Id as Key & Url as value.
 	 * 
 	 * @return HashMap<Integer, String>
 	 */
-	public static HashMap<Integer, String> getHashMappedDBData() {
+	public static HashMap<Integer, InitialData> getHashMappedDBData() {
 		Connection conn = null;
 		Statement stmt = null;
 		ResultSet rs = null;
 		String query = null;
-		HashMap<Integer, String> stubData = new HashMap<Integer, String>();
-		List<String> UrlList = new ArrayList<String>();
-		Integer count = 0;
+		HashMap<Integer, InitialData> stubData = new HashMap<Integer, InitialData>();
 
 		try {
 			conn = getDBConnection();
 			stmt = conn.createStatement();
-			UrlList = csvParser();
+			csvParser();
 
-			Iterator<String> urlListItr = UrlList.iterator();
+			ArrayList<InitialData> list = CsvParser.getStubCSVData();
 
-			while (urlListItr.hasNext()) {
-				String url = urlListItr.next();
+			for (int i = 0; i < list.size(); i++) {
+
+				String url = list.get(i).getStubURL();
+
 				query = "SELECT ID, URL FROM HARVESTER WHERE URL='" + url + "'";
+				System.out.println("Query: " + query);
+
 				rs = stmt.executeQuery(query);
 
 				while (rs.next()) {
-					Integer id = rs.getInt("ID");
-					String urlFromDB = rs.getString("URL");
-					stubData.put(id, urlFromDB);
-				}
-			}
-		} catch (SQLException se) {
-			se.printStackTrace();
-		} catch (Exception e) {
-			e.printStackTrace();
-		} finally {
-			if (conn != null) {
-				try {
-					conn.close();
-					System.out
-							.println("Closing DB Connection...................");
-				} catch (Exception e) {
-					e.printStackTrace();
-				}
-			}
-			if (stmt != null) {
-				try {
-					stmt.close();
-				} catch (Exception e) {
-					e.printStackTrace();
-				}
-			}
-			if (rs != null) {
-				try {
-					rs.close();
-				} catch (Exception e) {
-					e.printStackTrace();
-				}
-			}
-		}
-		return stubData;
-	}
-
-	/**
-	 * Method to read data from csv file with id & url, put them in the HashMap
-	 * with Id as Key & Url as value.
-	 * 
-	 * @return HashMap<Integer, String>
-	 */
-	public static HashMap<Integer, String> getHashMappedFileData() {
-		Connection conn = null;
-		Statement stmt = null;
-		ResultSet rs = null;
-		String query = null;
-		HashMap<Integer, String> stubData = new HashMap<Integer, String>();
-		List<String> UrlList = new ArrayList<String>();
-		Integer count = 0;
-
-		try {
-			conn = getDBConnection();
-			stmt = conn.createStatement();
-			UrlList = csvParser();
-
-			Iterator<String> urlListItr = UrlList.iterator();
-
-			while (urlListItr.hasNext()) {
-				String url = urlListItr.next();
-				query = "SELECT ID, URL FROM HARVESTER WHERE URL='" + url + "'";
-				rs = stmt.executeQuery(query);
-
-				while (rs.next()) {
-					Integer id = rs.getInt("ID");
-					String urlFromDB = rs.getString("URL");
-					stubData.put(id, urlFromDB);
+					int id = rs.getInt("ID");
+					InitialData initialData = new InitialData();
+					initialData.setStubEndpoint(list.get(i).getStubEndpoint());
+					initialData.setStubURL(list.get(i).getStubURL());
+					initialData.setStubID(id);
+					stubData.put(id, initialData);
 				}
 			}
 		} catch (SQLException se) {
@@ -326,79 +282,6 @@ public class JdbcConnect {
 				}
 			}
 		}
-	}
-
-	/**
-	 * Method to create csv file with stubid & url
-	 */
-	public static String createCsvDataFile() {
-		String CommaDelimiter = ",";
-		String NewLineSeparator = "\n";
-
-		String fileLocation = System.getProperty("user.dir")
-				+ "\\src\\main\\resources\\";
-		// String fileLocation =
-		// "C:\\Users\\Rohan.Pandhare\\Desktop\\Rohan\\CSVFiles";
-		// String csvFileHeaders = "StubId,Url";
-
-		FileWriter outCsvFile = null;
-
-		Map<Integer, String> IdUrlMap = null;
-		List<String> URLs = new ArrayList<String>();
-		Set<Integer> IDs = new HashSet<Integer>();
-		String OutFile = fileLocation + "\\csv"
-				+ new Date().toString().replace(" ", "_").replace(":", "_")
-				+ ".csv";
-
-		try {
-
-			IdUrlMap = getHashMappedDBData();
-			Iterator<Integer> SItr = IdUrlMap.keySet().iterator();
-			Iterator<String> LItr = IdUrlMap.values().iterator();
-
-			System.out.println("Writing to file : " + OutFile);
-			outCsvFile = new FileWriter(OutFile); // fileLocation+"\\csv"+ new
-													// Date().toString()+".csv");
-
-			// outCsvFile.append(csvFileHeaders.toString());
-			// outCsvFile.append(NewLineSeparator.toString());
-
-			while (SItr.hasNext()) {
-				outCsvFile.append(Integer.toString(SItr.next()));
-				outCsvFile.append(CommaDelimiter.toString());
-				outCsvFile.append(LItr.next().toString());
-				outCsvFile.append('\n');
-			}
-
-			System.out.println("Writing to file : " + OutFile
-					+ " Done!!!!!!!!!");
-
-			return OutFile;
-		} catch (FileNotFoundException fnfe) {
-			fnfe.printStackTrace();
-		} catch (IOException ioe) {
-			ioe.printStackTrace();
-		} catch (Exception e) {
-			e.printStackTrace();
-		} finally {
-			if (outCsvFile != null) {
-				try {
-					outCsvFile.close();
-				} catch (Exception ex) {
-					ex.printStackTrace();
-				}
-			}
-		}
-		return "";
-	}
-
-	/**
-	 * Testing purposes only
-	 * 
-	 * @param args
-	 */
-	public static void main(String[] args) {
-		getContent();
 	}
 
 }

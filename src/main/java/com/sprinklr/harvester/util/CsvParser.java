@@ -5,11 +5,10 @@ import java.io.FileNotFoundException;
 import java.io.FileReader;
 import java.io.IOException;
 import java.util.ArrayList;
-import java.util.Collection;
 import java.util.HashMap;
-import java.util.Iterator;
 import java.util.List;
-import java.util.Set;
+
+import com.sprinklr.harvester.model.InitialData;
 
 /**
  * Class to parse csv file
@@ -19,31 +18,39 @@ import java.util.Set;
  */
 public class CsvParser {
 
+	private static ArrayList<InitialData> list = new ArrayList<InitialData>();
+
+	public static ArrayList<InitialData> getStubCSVData() {
+		return list;
+	}
+
 	/**
 	 * Method to read & parse csv file,
 	 * 
 	 * @return List<String> List of all entries in csv file
 	 */
 	public static List<String> parseCsv() {
-		String source = PropertyHandler.getProperties().getProperty("source");
+		list = new ArrayList<InitialData>();
+		String source = PropertyHandler.getProperties().getProperty("source").toLowerCase();
 		String csvFileToParse = System.getProperty("user.dir")
-				+ "\\src\\main\\resources\\" + source.toLowerCase() + ".csv";
-		// String CsvFileToParse =
-		// "C:\\Users\\Rohan.Pandhare\\Desktop\\ctrip.urls.prod-db2.060315.csv";
+				+ "\\src\\main\\resources\\" + source + "\\" + source + ".csv";
 
 		BufferedReader br = null;
 		String line = "";
-		List<String> LinesList = new ArrayList<String>();
+		List<String> linesList = new ArrayList<String>();
 
 		try {
 			br = new BufferedReader(new FileReader(csvFileToParse));
 
 			while ((line = br.readLine()) != null) {
-				LinesList.add(line);
+				System.out.println("---- ");
+				linesList.add(line.split(",")[0]);
+				InitialData e = new InitialData();
+				e.setStubURL(line.split(",")[0]);
+				e.setStubEndpoint(line.split(",")[1]);
+				list.add(e);
 				System.out.println("CsvParser() : " + line);
 			}
-
-			// System.out.println("Number of lines : " + LinesList.size());
 		} catch (FileNotFoundException fne) {
 			fne.printStackTrace();
 		} catch (IOException ioe) {
@@ -57,8 +64,7 @@ public class CsvParser {
 				}
 			}
 		}
-		// System.out.println("Inside CsvParser.csvParse() method, Returning the list of urls from CSVFile=============>");
-		return LinesList;
+		return linesList;
 	}
 
 	/**
@@ -72,7 +78,6 @@ public class CsvParser {
 		BufferedReader br = null;
 		String line = "";
 		String commaDelimeter = ",";
-		String newLineSeparator = "\n";
 
 		HashMap<Integer, String> LinesHashMap = new HashMap<Integer, String>();
 
@@ -102,20 +107,5 @@ public class CsvParser {
 		}
 		// System.out.println("Inside CsvParser.csvParse() method, Returning the list of urls from CSVFile=============>");
 		return LinesHashMap;
-	}
-
-	public static void main(String[] args) {
-		HashMap<Integer, String> fileData = parseCsvWithIdUrl();
-		Set<Integer> keySet = fileData.keySet();
-		Collection<String> url = fileData.values();
-		Iterator<Integer> kitr = keySet.iterator();
-		Iterator<String> uitr = url.iterator();
-
-		while (kitr.hasNext()) {
-			System.out.println("ID : " + kitr.next());
-			System.out.println("URL : " + uitr.next());
-			System.out
-					.println("----------------------------------------------------");
-		}
 	}
 }
