@@ -4,12 +4,15 @@ import java.io.BufferedReader;
 import java.io.File;
 import java.io.FileReader;
 import java.io.FileWriter;
+import java.nio.charset.Charset;
 import java.util.*;
 
-import org.json.simple.JSONArray;
-import org.json.simple.JSONObject;
-import org.json.simple.parser.JSONParser;
+import org.json.*;//JSONArray;
+//import org.json.JSONObject;
+//import org.json.parser.JSONParser;
+import org.seleniumhq.jetty7.util.ajax.JSON;
 
+import com.google.gson.JsonObject;
 import com.rabbitmq.client.Channel;
 import com.rabbitmq.client.Connection;
 import com.rabbitmq.client.ConnectionFactory;
@@ -30,18 +33,21 @@ public class RabbitMQPullMessage {
 	 *            Json File data in String format
 	 * @return HashMap<String,ArrayList<ReviewData>>
 	 */
-	public static HashMap<String, ArrayList<ReviewData>> writeJsonToHashmap(
-			String message) {
+	public static HashMap<String, ArrayList<ReviewData>> writeJsonToHashmap(String message) {
 		HashMap<String, ArrayList<ReviewData>> reviewContent = new HashMap<String, ArrayList<ReviewData>>();
 
-		JSONParser parser = new JSONParser();
+		//JSONParser parser = new JSONParser();
 		try {
-			Object obj = parser.parse(message);
+		
+			//Object obj = parser.parse(message);
+			
+
+			JSONObject obj = new org.json.JSONObject(message);
 			JSONObject jsonObject = (JSONObject) obj;
 			JSONArray jsonEntries = (JSONArray) jsonObject.get("entries");
 			JSONObject record = (JSONObject) jsonObject.get("record");
-
-			for (int i = 0; i < jsonEntries.size(); i++) {
+			
+			for (int i = 0; i < jsonEntries.length(); i++) {
 				ReviewData rdObject = new ReviewData();
 
 				rdObject.setHarvesterID(record.get("harvesterId").toString());
@@ -64,7 +70,7 @@ public class RabbitMQPullMessage {
 
 				rdObject.setHarvesterID(record.get("harvesterId").toString());
 
-				System.out.println(rdObject.toString());
+				// System.out.println(rdObject.toString());
 
 				Set<String> reviewContentKeyset = reviewContent.keySet();
 				if (reviewContentKeyset.contains(rdObject.getAuthorId())) {
@@ -88,11 +94,30 @@ public class RabbitMQPullMessage {
 
 	public static String getHarvesterID(String message) {
 		try {
-			JSONParser parser = new JSONParser();
-			Object obj = parser.parse(message);
+			/*org.json.simple.parser.JSONParser parser = new org.json.simple.parser.JSONParser();
+			//String message1 = "\""+message.replace("\"", "\\\"")+"\"";
+		
+			Object obj = JSON.parse(message);//parser.parse(message);
+			System.out.println("obj : "+obj.toString());
+			
+			Map map = (Map)obj;
+			Map obj1 = (Map)map.get("record");
+			System.out.println("obj1 : " + obj1.toString());
+			
+			Object obj2 = (Object) obj1.get("harvesterId");
+			
+			System.out.println("obj2 : "+ obj2.toString() );
+			
+			String harvesterid = obj2.toString();*/
+			
+			JSONObject obj = new JSONObject(message);
 			JSONObject jsonObject = (JSONObject) obj;
+			JSONArray jsonEntries = (JSONArray) jsonObject.get("entries");
 			JSONObject record = (JSONObject) jsonObject.get("record");
+			
 			String harvesterid = record.get("harvesterId").toString();
+			
+			
 			return harvesterid;
 		} catch (Exception ex) {
 			ex.printStackTrace();
@@ -103,30 +128,41 @@ public class RabbitMQPullMessage {
 	public static HashMap<String, HashMap<String, ArrayList<ReviewData>>> pull() {
 
 		HashMap<String, HashMap<String, ArrayList<ReviewData>>> actualReviewDataPerStub = new HashMap<String, HashMap<String, ArrayList<ReviewData>>>();
-
+		Integer count = 0;
+		
 		try {
 
 			ConnectionFactory factory = new ConnectionFactory();
-			factory.setHost(PropertyHandler.getProperties().getProperty(
-					"mqhost"));
+			factory.setHost(PropertyHandler.getProperties().getProperty("mqhost"));
 			Connection connection = factory.newConnection();
 			Channel channel = connection.createChannel();
 
 			channel.queueDeclare(QUEUE_NAME, true, false, false, null);
-			System.out
-					.println(" [*] Waiting for messages. To exit press CTRL+C");
+			System.out.println(" [*] Waiting for messages. To exit press CTRL+C");
 
 			QueueingConsumer consumer = new QueueingConsumer(channel);
 			channel.basicConsume(QUEUE_NAME, true, consumer);
 
 			while (true) {
-				QueueingConsumer.Delivery delivery = consumer.nextDelivery();
-				String message = new String(delivery.getBody());
-				System.out.println(" [x] Received '" + message + "'");
-				String stubID = getHarvesterID(message);
-				HashMap<String, ArrayList<ReviewData>> actualDataByAuthorID = writeJsonToHashmap(message);
-				actualReviewDataPerStub.put(stubID, actualDataByAuthorID);
+				count++;
+				if(count < 10){
+					QueueingConsumer.Delivery delivery = consumer.nextDelivery(10000);
+					if (delivery == null) {
+						continue;
+					}
+					String message = new String(delivery.getBody());
+					JSONObject msgObj = new JSONObject();
+					System.out.println(" [x] Received ->> " + message);//message.replace("\"", "\\\"") + "'");
+					String stubID = getHarvesterID(message);
+					HashMap<String, ArrayList<ReviewData>> actualDataByAuthorID = writeJsonToHashmap(message);
+					actualReviewDataPerStub.put(stubID, actualDataByAuthorID);
+					Thread.sleep(5000);
+				}else{
+					break;
+				}
 			}
+			
+			System.out.println("++++++++++++++++++++++++out of the loop++++++++++++++++++++++++++++++");
 		} catch (Exception ex) {
 			ex.printStackTrace();
 		}
@@ -164,8 +200,7 @@ public class RabbitMQPullMessage {
 				System.out.println("Size of hashmap : " + hashmap.size());
 			}
 
-			System.out
-					.println("*****************************************************************************************");
+			System.out.println("*****************************************************************************************");
 
 			// Logic to traverse the hashmap returned by writeJsonToHashMap()
 
