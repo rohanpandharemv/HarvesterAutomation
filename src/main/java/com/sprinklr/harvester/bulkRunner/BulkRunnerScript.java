@@ -2,13 +2,18 @@ package com.sprinklr.harvester.bulkRunner;
 
 import java.util.*;
 
+import org.apache.log4j.Logger;
+
 import com.sprinklr.harvester.model.InitialData;
+import com.sprinklr.harvester.test.testCtrip;
 import com.sprinklr.harvester.util.CsvParser;
 import com.sprinklr.harvester.util.JdbcConnect;
 import com.sprinklr.harvester.util.PropertyHandler;
 
 public class BulkRunnerScript {
-
+	
+	public static Logger bulkRunnerSctiptLogger = testCtrip.logger;
+			
 	public static String commandMaker(Integer sid) {
 
 		String cmdHeader = "java ";
@@ -49,17 +54,20 @@ public class BulkRunnerScript {
 		if (sid != 0) {
 			mainCommand = mainCommand + cmdStubIdOption + stubIdString;
 		}
-		System.out.println(mainCommand);
+		bulkRunnerSctiptLogger.info("BulkRunnerSctipt.commandMaker() returning command : " + mainCommand);
+		//System.out.println(mainCommand);
 		return mainCommand;
 	}
 
 	public static void callBulkRunner(HashMap<Integer, InitialData> testData) {
-
+		
 		Set<Integer> testDataKeys = testData.keySet();
 		Iterator<Integer> testDataKey = testDataKeys.iterator();
-
+		Integer stubId;
 		while (testDataKey.hasNext()) {
-			CommandExecutor.exec(commandMaker(testDataKey.next()));
+			stubId = testDataKey.next();
+			bulkRunnerSctiptLogger.info("BulkRunnerSctipt.callBulkRunner() running command with stubId : " + stubId);
+			CommandExecutor.exec(commandMaker(stubId));
 		}
 
 		/**

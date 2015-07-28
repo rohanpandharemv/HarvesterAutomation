@@ -11,18 +11,25 @@ import java.sql.DriverManager;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Statement;
+import java.text.DateFormat;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 
+import org.apache.log4j.Logger;
+import org.seleniumhq.jetty7.security.JDBCLoginService;
+
 import com.sprinklr.harvester.model.InitialData;
+import com.sprinklr.harvester.test.testCtrip;
 
 public class JdbcConnect {
 
 	public static PropertyHandler propHandler = new PropertyHandler();
-
+	public static Logger JdbcLogger = testCtrip.logger;
+	
 	public static Connection getDBConnection() {
-
+		
+		
 		Connection con = null;
 		String driver = PropertyHandler.getProperties().getProperty("driver");
 		String host = PropertyHandler.getProperties().getProperty("host");
@@ -31,26 +38,29 @@ public class JdbcConnect {
 		String pass = PropertyHandler.getProperties().getProperty("pass");
 		String dbname = PropertyHandler.getProperties().getProperty("dbname");
 		String utf8 = "?useUnicode=true&characterEncoding=UTF-8";
+		
 		try {
 			Class.forName(driver);
 
-			System.out.println("Connecting to database....");
+			//System.out.println("Connecting to database....");
 
-			System.out.println("jdbc:mysql://" + host + ":" + port + "/"
-					+ dbname + "," + user + "," + pass);
-
-			con = DriverManager.getConnection("jdbc:mysql://" + host + ":"
-					+ port + "/" + dbname + utf8, user, pass);
+			//System.out.println("jdbc:mysql://" + host + ":" + port + "/"+ dbname + "," + user + "," + pass);
+			
+			JdbcLogger.info("getting database connection with " + "jdbc:mysql://" + host + ":" + port + "/"+ dbname + "," + user + "," + pass);
+			
+			con = DriverManager.getConnection("jdbc:mysql://" + host + ":"+ port + "/" + dbname + utf8, user, pass);
 
 			if (con != null) {
-				System.out.println("Connected to database with URL "
-						+ "jdbc:mysql://" + host + ":" + port + "/" + dbname);
+				//System.out.println("Connected to database with URL "+ "jdbc:mysql://" + host + ":" + port + "/" + dbname);
+				JdbcLogger.info("Connected to database with URL "+ "jdbc:mysql://" + host + ":" + port + "/" + dbname);
 			} else {
-				System.out.println("Connection Failed!!!");
+				JdbcLogger.warn("Connection Failed!!!");
+				//System.out.println("Connection Failed!!!");
 			}
 		} catch (Exception e) {
 			e.printStackTrace();
 		}
+		JdbcLogger.info("returning connection instance");
 		return con;
 	}
 
@@ -60,6 +70,7 @@ public class JdbcConnect {
 	 * @return List<String> Url values from csv file
 	 */
 	public static List<String> csvParser() {
+		JdbcLogger.info("returning list of url from csvParser()");
 		List<String> urlListFromCsvFile = new ArrayList<String>();
 		urlListFromCsvFile = CsvParser.parseCsv();
 		return urlListFromCsvFile;
@@ -72,7 +83,7 @@ public class JdbcConnect {
 	 * @return Integer SourceId
 	 */
 	public static Integer getSourceId() {
-
+		
 		Connection conn = null;
 		Statement stmt = null;
 		ResultSet rs = null;
@@ -84,8 +95,9 @@ public class JdbcConnect {
 		try {
 			conn = getDBConnection();
 			stmt = conn.createStatement();
-
+			JdbcLogger.info("getting sourceId from source table for " + source);
 			query = "SELECT ID FROM SOURCE WHERE NAME LIKE '%" + source + "%'";
+			JdbcLogger.info("Quering : "+ query);
 			rs = stmt.executeQuery(query);
 			while (rs.next()) {
 				sourceId = rs.getInt("ID");
@@ -99,8 +111,8 @@ public class JdbcConnect {
 			if (conn != null) {
 				try {
 					conn.close();
-					System.out
-							.println("Closing DB Connection...................");
+					JdbcLogger.info("closing database connection...");
+					//System.out.println("Closing DB Connection...................");
 				} catch (Exception e) {
 					e.printStackTrace();
 				}
@@ -120,11 +132,13 @@ public class JdbcConnect {
 				}
 			}
 		}
-
+		JdbcLogger.info("returning extracted sourceId : " + sourceId);
 		return sourceId;
 	}
 
 	public static int getStubID(String stubURL) {
+		JdbcLogger.debug("gettingStubId for url : " + stubURL);
+		
 		Connection conn = null;
 		Statement stmt = null;
 		ResultSet rs = null;
@@ -134,7 +148,8 @@ public class JdbcConnect {
 			stmt = conn.createStatement();
 
 			query = "SELECT ID, URL FROM HARVESTER WHERE URL='" + stubURL + "'";
-			System.out.println("Query: " + query);
+			JdbcLogger.info("Quering : " + query);
+			//System.out.println("Query: " + query);
 
 			rs = stmt.executeQuery(query);
 
@@ -154,6 +169,7 @@ public class JdbcConnect {
 	 * @return HashMap<Integer, String>
 	 */
 	public static HashMap<Integer, InitialData> getHashMappedDBData() {
+		JdbcLogger.info("getHashMappedDBData() getting database data & putting it into hashmap<Integer, InitialData>");
 		Connection conn = null;
 		Statement stmt = null;
 		ResultSet rs = null;
@@ -172,8 +188,8 @@ public class JdbcConnect {
 				String url = list.get(i).getStubURL();
 
 				query = "SELECT ID, URL FROM HARVESTER WHERE URL='" + url + "'";
-				System.out.println("Query: " + query);
-
+				//System.out.println("Query: " + query);
+				JdbcLogger.info("getHashMappedDBData() Quering : " + query);
 				rs = stmt.executeQuery(query);
 
 				while (rs.next()) {
@@ -193,8 +209,9 @@ public class JdbcConnect {
 			if (conn != null) {
 				try {
 					conn.close();
-					System.out
-							.println("Closing DB Connection...................");
+					/*System.out
+							.println("Closing DB Connection...................");*/
+					JdbcLogger.info("getHashMappedDBData() Closing DB connection");
 				} catch (Exception e) {
 					e.printStackTrace();
 				}
@@ -214,6 +231,7 @@ public class JdbcConnect {
 				}
 			}
 		}
+		JdbcLogger.info("getHashMappedDBData() returning database data wrapped into Hashmap<Integer, InitialData>");
 		return stubData;
 	}
 
@@ -231,8 +249,8 @@ public class JdbcConnect {
 		Writer out = null;
 
 		try {
-			file = new File(
-					"C:\\Users\\Rohan.Pandhare\\Desktop\\contentsFromDB.txt");
+			file = new File("C:\\Users\\Rohan.Pandhare\\Desktop\\contentsFromDB.txt");
+			JdbcLogger.info("getContent() getting content from file " + file);
 			FileWriter fw = new FileWriter(file);
 			// PrintStream out = new PrintStream(System.out, false, "UTF8");
 
@@ -242,14 +260,12 @@ public class JdbcConnect {
 			conn = getDBConnection();
 			stmt = conn.createStatement();
 			query = "SELECT CONTENT FROM  DOCUMENT WHERE HARVESTER_ID = '1506408'";
-
+			JdbcLogger.info("Quering : " + query);
 			rs = stmt.executeQuery(query);
 
 			while (rs.next()) {
-				// System.out.println(rs.getString("CONTENT").toString());
-				// fw.append(rs.getString("CONTENT").toString());
 				String ret = rs.getString("CONTENT").toString();
-				System.out.println(ret);
+				//System.out.println(ret);
 				out.write(ret);
 			}
 			out.flush();
@@ -261,8 +277,9 @@ public class JdbcConnect {
 			if (conn != null) {
 				try {
 					conn.close();
-					System.out
-							.println("Closing DB Connection...................");
+					/*System.out
+							.println("Closing DB Connection...................");*/
+					JdbcLogger.info("getContent() closing database connection...");
 				} catch (Exception e) {
 					e.printStackTrace();
 				}

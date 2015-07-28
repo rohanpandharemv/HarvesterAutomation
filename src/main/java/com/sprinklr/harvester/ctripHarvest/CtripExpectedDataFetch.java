@@ -23,8 +23,7 @@ public class CtripExpectedDataFetch {
 	public static HashMap<String, HashMap<String, ArrayList<ReviewData>>> getActualData(
 			HashMap<Integer, InitialData> testData) {
 
-		System.out
-				.println("Inside get actual data method of class CtripExpectedDataFetch............");
+		System.out.println("Inside get actual data method of class CtripExpectedDataFetch............");
 
 		HashMap<String, HashMap<String, ArrayList<ReviewData>>> expectedReviewDataPerStub = new HashMap<String, HashMap<String, ArrayList<ReviewData>>>();
 

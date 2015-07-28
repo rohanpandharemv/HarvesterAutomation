@@ -21,9 +21,8 @@ import com.sprinklr.harvester.model.ReviewData;
 import com.sprinklr.harvester.util.PropertyHandler;
 
 public class RabbitMQPullMessage {
-
-	public final static String QUEUE_NAME = PropertyHandler.getProperties()
-			.getProperty("pull_queue");
+	
+	public final static String QUEUE_NAME = PropertyHandler.getProperties().getProperty("pull_queue");
 
 	/**
 	 * Method to read data in Json Format & extract values out of it and returns
