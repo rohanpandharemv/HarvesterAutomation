@@ -1,5 +1,8 @@
 package com.sprinklr.harvester.model;
 
+/**
+ * POJO for saving the test data taken from the CSV file and the DB.
+ */
 public class InitialData {
 
 	private int stubID;
