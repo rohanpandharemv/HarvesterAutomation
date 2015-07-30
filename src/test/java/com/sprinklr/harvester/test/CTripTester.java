@@ -13,12 +13,12 @@ import org.testng.annotations.DataProvider;
 import org.testng.annotations.Test;
 
 import com.sprinklr.harvester.adminui.AddStubAdminUI;
-import com.sprinklr.harvester.bulkRunner.BulkRunnerScript;
 import com.sprinklr.harvester.ctripharvest.CtripExpectedDataFetch;
 import com.sprinklr.harvester.global.CompareFunctions;
 import com.sprinklr.harvester.model.InitialData;
 import com.sprinklr.harvester.model.ReviewData;
 import com.sprinklr.harvester.mq.RabbitMQPullMessage;
+import com.sprinklr.harvester.mq.RabbitMQPushMessage;
 import com.sprinklr.harvester.util.JdbcConnect;
 import com.sprinklr.harvester.util.PropertyHandler;
 
@@ -54,7 +54,8 @@ public class CTripTester {
 		LOGGER.info("**2** CTripTester.test001() completed fetching data from database & convert into HashMap<Integer, InitialData> testData ");
 
 		LOGGER.info("**3** CTripTester.test001() Call Bulk Runner to push the stubs in RabbitMQ");
-		BulkRunnerScript.callBulkRunner(testData);
+		// BulkRunnerScript.callBulkRunner(testData);
+		RabbitMQPushMessage.push(testData);
 		LOGGER.info("**4** CTripTester.test001() completed pushing all the stubUrls to queue from testData");
 
 		HashMap<String, HashMap<String, ArrayList<ReviewData>>> actualData = RabbitMQPullMessage.pull();
@@ -70,7 +71,6 @@ public class CTripTester {
 
 	/**
 	 * CTrip test data provider.
-	 * 
 	 * @return
 	 */
 	@DataProvider(name = "ctripdata")

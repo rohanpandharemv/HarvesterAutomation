@@ -17,7 +17,7 @@ import com.sprinklr.harvester.util.PropertyHandler;
 //import org.json.parser.JSONParser;
 
 /**
- * Rabbit MQ reusable functions.
+ * Rabbit MQ reusable function for pulling into queue.
  *
  */
 public class RabbitMQPullMessage {
