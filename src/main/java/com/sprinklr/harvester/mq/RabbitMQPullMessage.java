@@ -62,7 +62,7 @@ public class RabbitMQPullMessage {
 
 				rdObject.setHarvesterID(record.get("harvesterId").toString());
 
-				// System.out.println(rdObject.toString());
+				System.out.println(rdObject.toString());
 
 				Set<String> reviewContentKeyset = reviewContent.keySet();
 				if (reviewContentKeyset.contains(rdObject.getAuthorId())) {
@@ -120,7 +120,7 @@ public class RabbitMQPullMessage {
 			factory.setHost(PropertyHandler.getProperties().getProperty("mqhost"));
 			Connection connection = factory.newConnection();
 			Channel channel = connection.createChannel();
-
+			
 			channel.queueDeclare(QUEUE_NAME, true, false, false, null);
 			QueueingConsumer consumer = new QueueingConsumer(channel);
 			channel.basicConsume(QUEUE_NAME, true, consumer);

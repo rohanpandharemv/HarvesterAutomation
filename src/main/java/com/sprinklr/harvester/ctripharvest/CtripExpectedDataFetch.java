@@ -8,6 +8,7 @@ import java.util.List;
 import java.util.Set;
 import java.util.concurrent.TimeUnit;
 
+import org.apache.log4j.Logger;
 import org.openqa.selenium.By;
 import org.openqa.selenium.WebDriver;
 import org.openqa.selenium.WebElement;
@@ -25,14 +26,14 @@ import com.sprinklr.harvester.util.StaticUtils;
  */
 public class CtripExpectedDataFetch {
 
+	public final static Logger LOGGER = Logger.getLogger(CtripExpectedDataFetch.class);
+	
 	public static HashMap<String, HashMap<String, ArrayList<ReviewData>>> getActualData(
 	        HashMap<Integer, InitialData> testData) {
 
-		System.out.println("Inside get actual data method of class CtripExpectedDataFetch............");
+		LOGGER.info("CtripExpectedDataFetch - Inside get actual data method of class CtripExpectedDataFetch............");
 
 		HashMap<String, HashMap<String, ArrayList<ReviewData>>> expectedReviewDataPerStub = new HashMap<String, HashMap<String, ArrayList<ReviewData>>>();
-
-		// WebDriver driver = new HtmlUnitDriver();
 		WebDriver driver = new FirefoxDriver();
 
 		driver.manage().timeouts().implicitlyWait(60, TimeUnit.SECONDS);
@@ -68,8 +69,8 @@ public class CtripExpectedDataFetch {
 				mentionDatesText.add(mentionDates.get(i).getText());
 			}
 
-			List<WebElement> authorIDs = driver.findElements(By.xpath(PropertyHandler.getSourceProperties().getProperty(
-			        "author_xpath")));
+			List<WebElement> authorIDs = driver.findElements(By.xpath(PropertyHandler.getSourceProperties()
+			        .getProperty("author_xpath")));
 			ArrayList<String> authorIDsText = new ArrayList<String>();
 			for (int i = 0; i < authorIDs.size(); i++) {
 				authorIDsText.add(authorIDs.get(i).getText());
@@ -117,6 +118,7 @@ public class CtripExpectedDataFetch {
 			}
 			expectedReviewDataPerStub.put(stubID.toString(), reviewContent);
 		}
+		driver.close();
 		return expectedReviewDataPerStub;
 	}
 }

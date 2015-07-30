@@ -15,14 +15,12 @@ public class CompareFunctions {
 		System.out.println("Expected Data Key sets = " + eData.size() + " - " + eData.keySet().toString());
 
 		for (String expectedStubid : eData.keySet()) {
-			System.out.println("============== 111");
 			Assert.assertTrue(aData.containsKey(expectedStubid), "Stub ID does not match: " + expectedStubid);
 
 			HashMap<String, ArrayList<ReviewData>> actualData = aData.get(expectedStubid);
 			HashMap<String, ArrayList<ReviewData>> expectedData = eData.get(expectedStubid);
 
 			for (String expectedAuthor : expectedData.keySet()) {
-				System.out.println("============== 222");
 				System.out.println("Expected Author ID = " + expectedAuthor);
 				Assert.assertTrue(actualData.containsKey(expectedAuthor),
 				        "Author ID does not found in actual data list: " + expectedAuthor);
@@ -31,18 +29,17 @@ public class CompareFunctions {
 				ArrayList<ReviewData> expectedReviewList = expectedData.get(expectedAuthor);
 
 				for (ReviewData expectedReviewData : expectedReviewList) {
-					System.out.println("============== 333");
 					boolean flag = false;
 					ReviewData reviewData = null;
 					for (ReviewData actualReviewData : actualReviewList) {
 						reviewData = actualReviewData;
-						System.out.println("============== 444");
 						System.out.println("Expected Review Data AuthorID = " + expectedReviewData.getAuthorId());
 						System.out.println("Actual Review Data Author ID = " + actualReviewData.getAuthorId());
-						
-						System.out.println("Expected Review Data Mention Date = " + expectedReviewData.getMentionedDate());
+
+						System.out.println("Expected Review Data Mention Date = "
+						        + expectedReviewData.getMentionedDate());
 						System.out.println("Actual Review Data Mention Date = " + actualReviewData.getMentionedDate());
-						
+
 						System.out.println("Expected Review Data Rating = " + expectedReviewData.getRatings());
 						System.out.println("Actual Review Data Rating = " + actualReviewData.getRatings());
 

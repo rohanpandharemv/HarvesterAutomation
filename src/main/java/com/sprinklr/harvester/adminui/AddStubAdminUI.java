@@ -1,5 +1,6 @@
 package com.sprinklr.harvester.adminui;
 
+import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
 import java.util.concurrent.TimeUnit;
@@ -26,11 +27,32 @@ public class AddStubAdminUI {
 	public void addStubInAdminUI() {
 
 		LOGGER.info("AddStubAdminUI.addStubInAdminUI() Initialising the FirefoxDriver for adding new stub...");
+
+		ArrayList<String> stubUrl = new ArrayList<String>();
+		List<String> urlListToInsert = getUrlList();
+		LOGGER.info("AddStubAdminUI.addStubInAdminUI() getting list of stubs/urls to add, from csv file");
+		Iterator<String> urlListIterator = urlListToInsert.iterator();
+
+		while (urlListIterator.hasNext()) {
+			String nextURL = urlListIterator.next();
+			if (JdbcConnect.getStubID(nextURL) != 0) {
+				LOGGER.warn("AddStubAdminUI.addStubInAdminUI() stub already exists in DB! " + nextURL);
+				continue;
+			}
+			stubUrl.add(urlListIterator.next());
+		}
+
+		if (stubUrl.size() <= 0) {
+			return;
+		}
+
 		WebDriver driver = new FirefoxDriver();
 		driver.manage().timeouts().implicitlyWait(40, TimeUnit.SECONDS);
 		driver.manage().window().maximize();
 
 		String url = PropertyHandler.getProperties().getProperty("adminURL");
+		String username = PropertyHandler.getProperties().getProperty("adminuser");
+		String password = PropertyHandler.getProperties().getProperty("adminpassword");
 		LOGGER.info("AddStubAdminUI.addStubInAdminUI() Admin url to open : " + url);
 		String client = PropertyHandler.getProperties().getProperty("client");
 		LOGGER.info(" AddStubAdminUI.addStubInAdminUI() Client : " + client);
@@ -38,25 +60,14 @@ public class AddStubAdminUI {
 		driver.get(url + "/" + client + "/login.jsp");
 		LOGGER.info("AddStubAdminUI.addStubInAdminUI() opening page : " + url + "/" + client + "/login.jsp");
 
-		driver.findElement(By.name("uname")).sendKeys("kam");
-		LOGGER.info("AddStubAdminUI.addStubInAdminUI() Passing username : Kam");
-		driver.findElement(By.name("passcode")).sendKeys("nba2012");
-		LOGGER.info("AddStubAdminUI.addStubInAdminUI() Passing password : nba2012");
+		driver.findElement(By.name("uname")).sendKeys(username);
+		LOGGER.info("AddStubAdminUI.addStubInAdminUI() Passing username : " + username);
+		driver.findElement(By.name("passcode")).sendKeys(password);
+		LOGGER.info("AddStubAdminUI.addStubInAdminUI() Passing password : " + password);
 		driver.findElement(By.name("submit")).click();
 
-		List<String> urlListToInsert = getUrlList();
-		LOGGER.info("AddStubAdminUI.addStubInAdminUI() getting list of stubs/urls to add, from csv file");
-		Iterator<String> urlListIterator = urlListToInsert.iterator();
-
-		while (urlListIterator.hasNext()) {
-			String stubURL = urlListIterator.next();
-
-			LOGGER.info("AddStubAdminUI.addStubInAdminUI() checking for stubs existance : " + stubURL);
-
-			if (JdbcConnect.getStubID(stubURL) != 0) {
-				LOGGER.warn("AddStubAdminUI.addStubInAdminUI() stub already exists in DB! " + stubURL);
-				continue;
-			}
+		for (String nextURL : stubUrl) {
+			LOGGER.info("AddStubAdminUI.addStubInAdminUI() checking for stubs existance : " + nextURL);
 
 			driver.findElement(By.id("extdd-18")).click();
 			driver.switchTo().frame(0);
@@ -65,7 +76,7 @@ public class AddStubAdminUI {
 
 			driver.switchTo().defaultContent();
 			driver.switchTo().frame(1);
-			driver.findElement(By.name("url")).sendKeys(stubURL);
+			driver.findElement(By.name("url")).sendKeys(nextURL);
 
 			Select select = new Select(driver.findElement(By.name("source_id")));
 			select.selectByVisibleText(PropertyHandler.getProperties().getProperty("source"));

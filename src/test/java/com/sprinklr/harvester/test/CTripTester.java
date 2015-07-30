@@ -9,7 +9,6 @@ import java.util.HashMap;
 
 import org.apache.log4j.Logger;
 import org.testng.annotations.BeforeClass;
-import org.testng.annotations.BeforeMethod;
 import org.testng.annotations.DataProvider;
 import org.testng.annotations.Test;
 
@@ -23,12 +22,16 @@ import com.sprinklr.harvester.mq.RabbitMQPullMessage;
 import com.sprinklr.harvester.util.JdbcConnect;
 import com.sprinklr.harvester.util.PropertyHandler;
 
+/**
+ * 
+ *
+ */
 public class CTripTester {
 
 	public final static Logger LOGGER = Logger.getLogger(CTripTester.class);
 
 	/**
-	 * Add all of the stubs that does not exists in DB. Add it through Admin UI.
+	 * Add all of the stubs that does not exists in DB. Add it through ADMIN UI.
 	 */
 	@BeforeClass
 	public void addSutbsInDB() {
@@ -39,6 +42,7 @@ public class CTripTester {
 	}
 
 	/**
+	 * CTrip Harvester tests.
 	 * 
 	 * @param url
 	 * @param canonicalUrl
@@ -64,6 +68,11 @@ public class CTripTester {
 		CompareFunctions.compareData(actualData, expectedData);
 	}
 
+	/**
+	 * CTrip test data provider.
+	 * 
+	 * @return
+	 */
 	@DataProvider(name = "ctripdata")
 	public Object[][] ctripDataTest() {
 		String source = PropertyHandler.getProperties().getProperty("source").toLowerCase();
