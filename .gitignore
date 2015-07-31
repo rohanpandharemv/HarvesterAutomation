@@ -1,6 +1,6 @@
-target/
-test-output/
-lib/
-.settings/
-logs/
+target/*
+test-output/*
+lib/*
+.settings/*
+logs/*
 .classpath
